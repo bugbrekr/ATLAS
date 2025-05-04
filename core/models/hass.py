@@ -1,42 +1,15 @@
+"""Models for Home Assistant."""
+
 import datetime
 from dataclasses import dataclass
 from typing import Union
 from . import chat
-
-@dataclass
-class UserMessage(chat.UserMessage):
-    pass
-
-@dataclass
-class AssistantMessage(chat.AssistantMessage):
-    tts_text: str = None
-    def __init__(self, content: str, tts_text: str = None):
-        if tts_text is None:
-            tts_text = content
-        super().__init__(
-            content = content
-        )
-        self.tts_text = tts_text
-
-def create_message(role: str, content: str, tts_text: str = None) -> Union[UserMessage, AssistantMessage]:
-    match role:
-        case "user":
-            return UserMessage(content = content)
-        case "assistant":
-            return AssistantMessage(content = content, tts_text = tts_text)
-        case _:
-            raise ValueError(f"Invalid role: {role}")
-
-
-@dataclass
-class History:
-    history: list = None
-    def __init__(self, history: list):
-        self.history = []
-        for msg in history:
-            self.history.append(create_message(**msg))
-    def generate_history(self):
-        pass
+from .chat import (
+    UserMessage,
+    AssistantMessage,
+    History,
+    create_message,
+)
 
 @dataclass
 class User:
@@ -72,6 +45,7 @@ class PromptPayload:
     conversation_id: str = None
     user: User = None
     device: Device = None
+    message: Union[UserMessage, AssistantMessage] = None
     def __init__(self, payload: dict):
         if not isinstance(payload, dict): raise TypeError("`payload` must be `dict`")
         self.text = payload.get("input_text")
@@ -80,3 +54,23 @@ class PromptPayload:
         self.conversation_id = payload.get("conversation_id")
         self.user = User(payload.get("user_info"))
         self.device = Device(payload.get("device_info")) if payload.get("device_info") else None
+        self.message = create_message("user", self.text)
+
+def generate_response_payload(history: History, content:str = None, tts_text: str = None, continue_conversation: bool = False) -> dict:
+    """
+    Generates response payload from history.
+    If last message in history is not an `AssistantMessage`, one will be added from `content` and `tts_text`.
+    """
+    if not isinstance(history.history[-1], AssistantMessage):
+        if content is None:
+            raise ValueError("Last added message in history must be `AssistantMessage` or `content` must be provided.")
+        if content is None:
+            raise ValueError("`content` must be provided if last message in history is not `AssistantMessage`")
+        if tts_text is None:
+            raise ValueError("`tts_text` must be provided if last message in history is not `AssistantMessage`")
+        history.add_assistant(content, tts_text)
+    return {
+        "tts_text": tts_text or history.history[-1].tts_text,
+        "new_history": history.to_messages(),
+        "continue_conversation": continue_conversation
+    }

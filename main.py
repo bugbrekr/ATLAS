@@ -1,9 +1,10 @@
+"""Main server."""
+
 import bottle
 import json
 import os
-import models
-
-from pprint import pprint
+import core
+from core import models
 
 class JSONBottle(bottle.Bottle):
     def default_error_handler(self, res):
@@ -14,6 +15,8 @@ class JSONBottle(bottle.Bottle):
         })
 
 app = JSONBottle()
+
+atlas = core.atlas.ATLAS(models.config.Config('config/'))
 
 def _check_auth_token(token):
     try:
@@ -38,17 +41,8 @@ def require_auth(func):
 @app.route("/process_hass_user", method="POST")
 @require_auth
 def process_hass_user():
-    print(bottle.request.json)
     prompt = models.hass.PromptPayload(bottle.request.json)
-    print(prompt)
-    response_payload = {
-        "tts_text": "Hello, World!",
-        "new_history": [
-            {"role": "user", "content": prompt.text},
-            {"role": "assistant", "content": ""}
-        ],
-        "continue_conversation": False
-    }
+    response_payload = atlas.process_hass_user(prompt)
     return {
         "success": True,
         "data": response_payload

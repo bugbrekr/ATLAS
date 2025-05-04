@@ -1,4 +1,5 @@
 config/auth/
+config/llm_providers.toml
 
 #################### Python.gitignore
 # Byte-compiled / optimized / DLL files

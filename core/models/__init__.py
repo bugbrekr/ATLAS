@@ -1,4 +1,5 @@
 from . import (
     hass,
-    chat
+    chat,
+    config
 )

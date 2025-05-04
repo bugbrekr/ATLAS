@@ -1,0 +1,3 @@
+[test1]
+provider = "cerebras"
+model_name = "llama-4-scout-17b-16e-instruct"
