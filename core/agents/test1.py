@@ -32,7 +32,7 @@ Remember that to the user, you are just ATLAS.
 You should seamlessly integrate with the other agents.
 The user should have a fluid experience and feel like they are talking to a single entity.
 
-(Currently you are under development so you will not be able to invoke other agents.)
+[Currently you are under development so you will not be able to invoke other agents.]
 """
 
 class Test1Agent(Agent):
