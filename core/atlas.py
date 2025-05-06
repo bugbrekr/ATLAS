@@ -2,7 +2,6 @@
 
 from . import (
     models,
-    llm,
     agents
 )
 
@@ -13,4 +12,3 @@ class ATLAS:
     def process_hass_user(self, prompt: models.hass.PromptPayload) -> dict:
         self.agents.test1.process(prompt)
         return models.hass.generate_response_payload(prompt.history)
-    

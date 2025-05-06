@@ -15,5 +15,8 @@ class Cerebras(LLM):
             model=self.model_name,
             stream=True
         )
-        for chunk in stream:
-            yield chunk.choices[0].delta.content or ""
+        try:
+            for chunk in stream:
+                yield chunk.choices[0].delta.content or ""
+        finally:
+            stream.close()
