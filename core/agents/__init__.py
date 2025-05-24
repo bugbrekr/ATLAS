@@ -23,15 +23,15 @@ class Agent:
         prompt.history.add_assistant(resp)
         return resp
 
-from . import test1
+from . import supervisor
 
 _AGENTS_LIST: dict[str, Agent] = {
-    "test1": test1.Test1Agent,
+    "supervisor": supervisor.SupervisorAgent,
 }
 
 @dataclass
 class Agents:
-    test1: test1.Test1Agent
+    supervisor: supervisor.SupervisorAgent
     def __init__(self, agent_configs: list[models.config.AgentConfig]):
         for agent_config in agent_configs:
             if agent_config.name not in _AGENTS_LIST:

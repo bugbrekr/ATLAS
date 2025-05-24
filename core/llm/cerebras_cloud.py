@@ -9,10 +9,11 @@ class Cerebras(LLM):
     def __init__(self, provider_config: models.config.ProviderConfig):
         self._client = cerebras.cloud.sdk.Cerebras(api_key=provider_config.api_key)
         super().__init__(provider_config.name)
-    def _complete(self, messages: list) -> Iterable[str]:
+    def _complete(self, messages: list, temperature: float = None) -> Iterable[str]:
         stream = self._client.chat.completions.create(
             messages=messages,
             model=self.model_name,
+            temperature=temperature,
             stream=True
         )
         try:

@@ -1,4 +1,4 @@
-[test1]
+[supervisor]
 provider = "cerebras"
 # model_name = "llama-4-scout-17b-16e-instruct"
-model_name = "llama-3.3-70b"
+model_name = "qwen-3-32b"

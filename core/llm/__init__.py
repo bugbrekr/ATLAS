@@ -15,11 +15,14 @@ class LLM:
         self.model_name = model_name
     def _complete(self, messages: list) -> Iterable[str]:
         raise NotImplementedError("Subclasses should implement this method.")
-    def complete(self, history: models.chat.History, system_prompt: str = None) -> Iterable[str]:
+    def complete(self, history: models.chat.History, system_prompt: str = None, temperature: float = None) -> Iterable[str]:
         messages = history.to_messages()
         if system_prompt:
             messages.insert(0, {"role": "system", "content": system_prompt})
-        for chunk in self._complete(messages):
+        for chunk in self._complete(
+            messages=messages,
+            temperature=temperature
+        ):
             for i in chunk:
                 yield i
 
