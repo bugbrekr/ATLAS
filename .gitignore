@@ -1,6 +1,8 @@
 config/auth/
 config/llm_providers.toml
 
+.vscode/
+
 #################### Python.gitignore
 # Byte-compiled / optimized / DLL files
 __pycache__/
