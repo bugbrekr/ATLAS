@@ -12,14 +12,15 @@ class Agent:
     def __init__(self, _llm: llm.LLM, model_name: str):
         self.llm = _llm
         self.llm.set_model_name(model_name)
-    def process(self, prompt: models.hass.PromptPayload) -> str:
-        """Process the prompt and return a response."""
+    def process(self, prompt: models.hass.PromptPayload) -> bool:
+        """Process the prompt and return a response. Returns `continue_conversation`"""
         resp = self._process(prompt)
         if isinstance(resp, tuple):
             resp_text = resp[0]
             tts_text = resp[1]
+            continue_conversation = resp[2] if len(resp) > 2 else False
             prompt.history.add_assistant(resp_text, tts_text)
-            return resp_text
+            return continue_conversation
         prompt.history.add_assistant(resp)
         return resp
 
