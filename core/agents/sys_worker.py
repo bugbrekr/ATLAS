@@ -10,6 +10,9 @@ from .. import (
 
 import re
 import datetime
+import subprocess
+import secrets
+import os
 
 SYSTEM = """
 You are a specialized agent within ATLAS, a multi-agent AI architecture designed to solve complex problems through collaborative intelligence.
@@ -19,8 +22,11 @@ When handling tasks, maintain awareness that you operate within this broader eco
 
 # About Yourself
 You are the System Worker (sys_worker) among the committee.
-You will not be interacting with users directly.
-Instead, the supervisor agent will prompt you with tasks or goals that you need to achieve.
+You are an expert Python coder and can navigate system resources.
+
+Your interaction will only be with a supervisor agent.
+The user will interact with the superviser agent, and you will be invoked by the supervisor if needed.
+The supervisor will prompt you with a task/goal that you need to achieve with only the information given.
 You have access to a Python runtime that's included with many tools that are documented below.
 You will be given a detailed prompt from the supervisor agent to achieve a task.
 Your job is to use your capabilities and access to complete the task and report back with confirmation.
@@ -136,7 +142,7 @@ class StreamManager:
         if flag.type == "s_out" and flag.start == False:
             self.s_out = self.s_out[:-8].strip()
         if flag.type == "python" and flag.start == False:
-            self.python = self.python[:-8].strip()
+            self.python = self.python[:-11].strip()
 
 class StreamReader:
     def __init__(self, stream: Iterable[str]):
@@ -180,6 +186,7 @@ class SysWorkerAgent(Agent):
         }
     def process(self, prompt: str):
         prompt_text = self._generate_prompt(prompt)
+        python_runtime_env_id = secrets.token_hex(16)
         history = [
             {"role": "user", "content": prompt_text}
         ]
@@ -198,9 +205,9 @@ class SysWorkerAgent(Agent):
                 s_out += result["s_out"]+"\n"
                 break
             if result["_"] == "python_call":
-                print("Python Call:", result["python_call"])
+                print("[PYTHON_CODE]:", result["python_call"])
                 history.append({"role": "assistant", "content": result["response"]})
-                python_result = execute_python(result["python_call"])
+                python_result = execute_python(result["python_call"], python_runtime_env_id)
                 history.append({"role": "tool", "content": python_result, "tool_call_id": "python"})
         return s_out.strip()
     def _generate_prompt(self, prompt: str) -> str:
@@ -212,5 +219,24 @@ class SysWorkerAgent(Agent):
         ))
         return prompt_text
 
-def execute_python(python_call) -> str:
-    return "ERROR: PYTHON RUNTIME NOT IMPLEMENTED YET"
+def execute_python(python_call: str, env_id: str = None) -> str:
+    if env_id is None:
+        env_id = secrets.token_hex(16)
+    path = f"/tmp/{env_id}/"
+    if not os.path.exists(path):
+        os.mkdir(path)
+    script_path = path+f"{secrets.token_hex(8)}.py"
+    with open(script_path, "w") as f:
+        f.write(python_call)
+    result = run_sandboxed(script_path, path)
+    print("[PYTHON_RESULT]:", result)
+    return result
+
+def run_sandboxed(script_path, working_dir="/tmp/"):
+    result = subprocess.run([
+        "su", "-c", f"cd {working_dir} && python3 {script_path}", "sandbox"
+    ], capture_output=True, text=True, timeout=30)
+    output = result.stdout
+    if result.stderr:
+        output += result.stderr
+    return output

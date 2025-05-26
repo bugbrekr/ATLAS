@@ -53,10 +53,10 @@ When talking to the user directly, limit your output (unless necessary) to about
 
 # Agents and How to Invoke Them
 You can invoke an agent by outputting in the following format:
-<|agent| agent_name>A sufficiently detailed prompt for the agent to work with.</|agent|>
+<|agent| agent_name>A prompt message to give directly to the agent.</|agent|>
 
-You need to provide detailed information in plain language to the agent as its prompt.
-You will receive the agent's reponse as a tool output.
+You need to provide detailed information (when available) in natural language to the agent as its prompt.
+You will receive the agent's messages as a reponse.
 Do not output anything after an agent invocation. Only invoke an agent at the end of your response.
 
 When you need to use an agent:
@@ -223,7 +223,7 @@ class SupervisorAgent(Agent):
                 print("\n")
                 return result["response"], u_out, result["continue_conversation"]
             if result["_"] == "agent_invocation":
-                print("Agent Invocation:", result["agent_invocation"])
+                print(f"[AGENT_INVOCATION {result['agent_invocation']['agent_name']}]:", result["agent_invocation"]["prompt"])
                 agent_invocation = result["agent_invocation"]
                 agent = None
                 for i in self.agents.agents:
